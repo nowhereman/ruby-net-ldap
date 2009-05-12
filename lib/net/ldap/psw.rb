@@ -43,11 +43,11 @@ class Password
   def generate( type, str )
     case type
     when :md5
-      require 'md5'
-      "{MD5}#{ [MD5.new( str.to_s ).digest].pack("m").chomp }"
+      require 'digest/md5'
+      "{MD5}#{ [Digest::MD5.digest( str.to_s )].pack("m").chomp }"
     when :sha
-      require 'sha1'
-      "{SHA}#{ [SHA1.new( str.to_s ).digest].pack("m").chomp }"
+      require 'digest/sha1'
+      "{SHA}#{ [Digest::SHA1.digest( str.to_s )].pack("m").chomp }"
     # when ssha
     else
       raise Net::LDAP::LdapError.new( "unsupported password-hash type (#{type})" )

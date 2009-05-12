@@ -39,11 +39,12 @@ class Dataset < Hash
   def Dataset::read_ldif io
     ds = Dataset.new
 
-    line = io.gets && chomp
+    line = io.gets && $_.chomp!
     dn = nil
 
     while line
-      io.gets and chomp
+      io.gets && $_.chomp!
+      
       if $_ =~ /^[\s]+/
         line << " " << $'
       else

@@ -1,6 +1,6 @@
 # $Id: testber.rb 230 2006-12-19 18:27:57Z blackhedd $
 
-require 'common'
+require File.dirname(__FILE__) + '/common'
 
 class TestBer < Test::Unit::TestCase
 

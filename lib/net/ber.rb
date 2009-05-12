@@ -35,7 +35,6 @@ module Net
 
   class BerError < StandardError; end
 
-
   class BerIdentifiedString < String
     attr_accessor :ber_identifier
     def initialize args
@@ -53,33 +52,35 @@ module Net
   class BerIdentifiedNull
     attr_accessor :ber_identifier
     def to_ber
-	"\005\000"
+      "\005\000"
     end
   end
 
   class BerIdentifiedOid
     attr_accessor :ber_identifier
+    
     def initialize oid
-	if oid.is_a?(String)
-	    oid = oid.split(/\./).map {|s| s.to_i }
-	end
-	@value = oid
+      if oid.is_a?(String)
+        oid = oid.split(/\./).map {|s| s.to_i }
+      end
+      @value = oid
     end
+    
     def to_ber
-	# Provisional implementation.
-	# We ASSUME that our incoming value is an array, and we
-	# use the Array#to_ber_oid method defined below.
-	# We probably should obsolete that method, actually, in
-	# and move the code here.
-	# WE ARE NOT CURRENTLY ENCODING THE BER-IDENTIFIER.
-	# This implementation currently hardcodes 6, the universal OID tag.
-	ary = @value.dup
-	first = ary.shift
-	raise Net::BER::BerError.new(" invalid OID" ) unless [0,1,2].include?(first)
-	first = first * 40 + ary.shift
-	ary.unshift first
-	oid = ary.pack("w*")
-	[6, oid.length].pack("CC") + oid
+      # Provisional implementation.
+      # We ASSUME that our incoming value is an array, and we
+      # use the Array#to_ber_oid method defined below.
+      # We probably should obsolete that method, actually, in
+      # and move the code here.
+      # WE ARE NOT CURRENTLY ENCODING THE BER-IDENTIFIER.
+      # This implementation currently hardcodes 6, the universal OID tag.
+      ary = @value.dup
+      first = ary.shift
+      raise Net::BER::BerError.new(" invalid OID" ) unless [0,1,2].include?(first)
+      first = first * 40 + ary.shift
+      ary.unshift first
+      oid = ary.pack("w*")
+      [6, oid.length].pack("CC") + oid
     end
   end
 
@@ -91,15 +92,15 @@ module Net
   #
   def self.compile_syntax syn
     out = [nil] * 256
-    syn.each {|tclass,tclasses|
+    syn.each do |tclass,tclasses|
       tagclass = {:universal=>0, :application=>64, :context_specific=>128, :private=>192} [tclass]
-      tclasses.each {|codingtype,codings|
+      tclasses.each do |codingtype,codings|
         encoding = {:primitive=>0, :constructed=>32} [codingtype]
-        codings.each {|tag,objtype|
+        codings.each do |tag,objtype|
           out[tagclass + encoding + tag] = objtype
-        }
-      }
-    }
+        end
+      end
+    end
     out
   end
 
@@ -110,28 +111,28 @@ module Net
     # Maybe this should have been a hash.
     TagClasses = [:universal, :application, :context_specific, :private]
 
-    BuiltinSyntax = BER.compile_syntax( {
-	:universal => {
-	    :primitive => {
-		1 => :boolean,
-		2 => :integer,
-		4 => :string,
-		5 => :null,
-		6 => :oid,
-		10 => :integer,
-		13 => :string # (relative OID)
-	    },
-	    :constructed => {
-		16 => :array,
-		17 => :array
-	    }
-	},
-	:context_specific => {
-	    :primitive => {
-		10 => :integer
-	    }
-	}
-    })
+    BuiltinSyntax = BER.compile_syntax(
+      :universal => {
+        :primitive => {
+          1 => :boolean,
+          2 => :integer,
+          4 => :string,
+          5 => :null,
+          6 => :oid,
+          10 => :integer,
+          13 => :string # (relative OID)
+        },
+        :constructed => {
+          16 => :array,
+          17 => :array
+        }
+      },
+      :context_specific => {
+        :primitive => {
+          10 => :integer
+        }
+      }
+    )
 
     #
     # read_ber
@@ -149,12 +150,14 @@ module Net
       #return nil if eof?
 
       id = getc or return nil  # don't trash this value, we'll use it later
+      id = id.ord if RUBY_VERSION.to_f >= 1.9
       #tag = id & 31
       #tag < 31 or raise BerError.new( "unsupported tag encoding: #{id}" )
       #tagclass = TagClasses[ id >> 6 ]
       #encoding = (id & 0x20 != 0) ? :constructed : :primitive
 
       n = getc
+      n = n.ord if RUBY_VERSION.to_f >= 1.9
       lengthlength,contentlength = if n <= 127
         [1,n]
       else
@@ -182,22 +185,22 @@ module Net
         newobj.each_byte {|b| j = (j << 8) + b}
         j
       elsif objtype == :oid
-	  # cf X.690 pgh 8.19 for an explanation of this algorithm.
-	  # Potentially not good enough. We may need a BerIdentifiedOid
-	  # as a subclass of BerIdentifiedArray, to get the ber identifier
-	  # and also a to_s method that produces the familiar dotted notation.
-	  oid = newobj.unpack("w*")
-	  f = oid.shift
-	  g = if f < 40
-	      [0, f]
-	  elsif f < 80
-	      [1, f-40]
-	  else
-	      [2, f-80] # f-80 can easily be > 80. What a weird optimization.
-	  end
-	  oid.unshift g.last
-	  oid.unshift g.first
-	  oid
+      # cf X.690 pgh 8.19 for an explanation of this algorithm.
+      # Potentially not good enough. We may need a BerIdentifiedOid
+      # as a subclass of BerIdentifiedArray, to get the ber identifier
+      # and also a to_s method that produces the familiar dotted notation.
+      oid = newobj.unpack("w*")
+      f = oid.shift
+      g = if f < 40
+          [0, f]
+      elsif f < 80
+          [1, f-40]
+      else
+          [2, f-80] # f-80 can easily be > 80. What a weird optimization.
+      end
+      oid.unshift g.last
+      oid.unshift g.first
+      oid
       elsif objtype == :array
         #seq = []
         seq = BerIdentifiedArray.new
@@ -213,9 +216,9 @@ module Net
       elsif objtype == :boolean
         newobj != "\000"
       elsif objtype == :null
-	  n = BerIdentifiedNull.new
-	  n.ber_identifier = id
-	  n
+      n = BerIdentifiedNull.new
+      n.ber_identifier = id
+      n
       else
         #raise BerError.new( "unsupported object type: class=#{tagclass}, encoding=#{encoding}, tag=#{tag}" )
         raise BerError.new( "unsupported object type: id=#{id}" )
@@ -230,91 +233,95 @@ module Net
 
     end
 
-	    #--
-	    # Violates DRY! This replicates the functionality of #read_ber.
-	    # Eventually this method may replace that one.
-	    # This version of #read_ber behaves properly in the face of incomplete
-	    # data packets. If a full BER object is detected, we return an array containing
-	    # the detected object and the number of bytes consumed from the string.
-	    # If we don't detect a complete packet, return nil.
-	    #
-	    # Observe that weirdly we recursively call the original #read_ber in here.
-	    # That needs to be fixed if we ever obsolete the original method in favor of this one.
-	    def read_ber_from_string str, syntax=nil
-		id = str[0] or return nil
-		n = str[1] or return nil
-		n_consumed = 2
-		lengthlength,contentlength = if n <= 127
-		    [1,n]
-		else
-		    n1 = n & 127
-		    return nil unless str.length >= (n_consumed + n1)
-		    j = 0
-		    n1.times {
-			j = (j << 8) + str[n_consumed]
-			n_consumed += 1
-		    }
-		    [1 + (n1), j]
-		end
+    #--
+    # Violates DRY! This replicates the functionality of #read_ber.
+    # Eventually this method may replace that one.
+    # This version of #read_ber behaves properly in the face of incomplete
+    # data packets. If a full BER object is detected, we return an array containing
+    # the detected object and the number of bytes consumed from the string.
+    # If we don't detect a complete packet, return nil.
+    #
+    # Observe that weirdly we recursively call the original #read_ber in here.
+    # That needs to be fixed if we ever obsolete the original method in favor of this one.
+    def read_ber_from_string str, syntax=nil
+      id = str[0] || return
+      id = id.ord if RUBY_VERSION.to_f >= 1.9
 
-		return nil unless str.length >= (n_consumed + contentlength)
-		newobj = str[n_consumed...(n_consumed + contentlength)]
-		n_consumed += contentlength
+      n = str[1] || return
+      n = n.ord if RUBY_VERSION.to_f >= 1.9
+      
+      n_consumed = 2
+      lengthlength,contentlength = if n <= 127
+          [1,n]
+      else
+        n1 = n & 127
+        return nil unless str.length >= (n_consumed + n1)
+        j = 0
+        n1.times do
+          j = (j << 8) + str[n_consumed]
+          n_consumed += 1
+        end
+        [1 + (n1), j]
+      end
 
-		objtype = (syntax && syntax[id]) || BuiltinSyntax[id]
+      return nil unless str.length >= (n_consumed + contentlength)
+      newobj = str[n_consumed...(n_consumed + contentlength)]
+      n_consumed += contentlength
 
-		# == is expensive so sort this if/else so the common cases are at the top.
-		obj = if objtype == :array
-		    seq = BerIdentifiedArray.new
-		    seq.ber_identifier = id
-		    sio = StringIO.new( newobj || "" )
-		    # Interpret the subobject, but note how the loop
-		    # is built: nil ends the loop, but false (a valid
-		    # BER value) does not!
-		    # Also, we can use the standard read_ber method because
-		    # we know for sure we have enough data. (Although this
-		    # might be faster than the standard method.)
-		    while (e = sio.read_ber(syntax)) != nil
-			seq << e
-		    end
-		    seq
-		elsif objtype == :string
-		    s = BerIdentifiedString.new( newobj || "" )
-		    s.ber_identifier = id
-		    s
-		elsif objtype == :integer
-		    j = 0
-		    newobj.each_byte {|b| j = (j << 8) + b}
-		    j
-		elsif objtype == :oid
-		    # cf X.690 pgh 8.19 for an explanation of this algorithm.
-		    # Potentially not good enough. We may need a BerIdentifiedOid
-		    # as a subclass of BerIdentifiedArray, to get the ber identifier
-		    # and also a to_s method that produces the familiar dotted notation.
-		    oid = newobj.unpack("w*")
-		    f = oid.shift
-		    g = if f < 40
-			[0,f]
-		    elsif f < 80
-			[1, f-40]
-		    else
-			[2, f-80] # f-80 can easily be > 80. What a weird optimization.
-		    end
-		    oid.unshift g.last
-		    oid.unshift g.first
-		    oid
-		elsif objtype == :boolean
-		    newobj != "\000"
-		elsif objtype == :null
-		    n = BerIdentifiedNull.new
-		    n.ber_identifier = id
-		    n
-		else
-		    raise BerError.new( "unsupported object type: id=#{id}" )
-		end
+      objtype = (syntax && syntax[id]) || BuiltinSyntax[id]
 
-		[obj, n_consumed]
-	    end
+      # == is expensive so sort this if/else so the common cases are at the top.
+      obj = if objtype == :array
+        seq = BerIdentifiedArray.new
+        seq.ber_identifier = id
+        sio = StringIO.new( newobj || "" )
+        # Interpret the subobject, but note how the loop
+        # is built: nil ends the loop, but false (a valid
+        # BER value) does not!
+        # Also, we can use the standard read_ber method because
+        # we know for sure we have enough data. (Although this
+        # might be faster than the standard method.)
+        while (e = sio.read_ber(syntax)) != nil
+          seq << e
+        end
+        seq
+      elsif objtype == :string
+        s = BerIdentifiedString.new( newobj || "" )
+        s.ber_identifier = id
+        s
+      elsif objtype == :integer
+        j = 0
+        newobj.each_byte {|b| j = (j << 8) + b}
+        j
+      elsif objtype == :oid
+        # cf X.690 pgh 8.19 for an explanation of this algorithm.
+        # Potentially not good enough. We may need a BerIdentifiedOid
+        # as a subclass of BerIdentifiedArray, to get the ber identifier
+        # and also a to_s method that produces the familiar dotted notation.
+        oid = newobj.unpack("w*")
+        f = oid.shift
+        g = if f < 40
+          [0,f]
+        elsif f < 80
+          [1, f-40]
+        else
+          [2, f-80] # f-80 can easily be > 80. What a weird optimization.
+        end
+        oid.unshift g.last
+        oid.unshift g.first
+        oid
+      elsif objtype == :boolean
+        newobj != "\000"
+      elsif objtype == :null
+        n = BerIdentifiedNull.new
+        n.ber_identifier = id
+        n
+      else
+        raise BerError.new( "unsupported object type: id=#{id}" )
+      end
+
+      [obj, n_consumed]
+    end
 
   end # module BERParser
   end # module BER
@@ -351,19 +358,20 @@ end
 
 
 class String
-    include Net::BER::BERParser
-    def read_ber syntax=nil
-	StringIO.new(self).read_ber(syntax)
+  include Net::BER::BERParser
+  def read_ber syntax=nil
+    StringIO.new(self).read_ber(syntax)
+  end
+
+  def read_ber! syntax=nil
+    obj,n_consumed = read_ber_from_string(self, syntax)
+    if n_consumed
+      self.slice!(0...n_consumed)
+      obj
+    else
+      nil
     end
-    def read_ber! syntax=nil
-	obj,n_consumed = read_ber_from_string(self, syntax)
-	if n_consumed
-	    self.slice!(0...n_consumed)
-	    obj
-	else
-	    nil
-	end
-    end
+  end
 end
 
 #----------------------------------------------
@@ -421,7 +429,7 @@ class Fixnum
   # Example: SNMP's Counter, Gauge, and TimeTick types.
   #
   def to_ber_application tag
-      [0x40 + tag].pack("C") + to_ber_internal
+    [0x40 + tag].pack("C") + to_ber_internal
   end
 
   #--
@@ -433,13 +441,13 @@ class Fixnum
     raise Net::BER::BerError.new( "range error in fixnum" ) unless self >= 0
     z = [self].pack("N")
     zlen = if self < 0x80
-	1
+    1
     elsif self < 0x8000
-	2
+    2
     elsif self < 0x800000
-	3
+    3
     else
-	4
+    4
     end
     [zlen].pack("C") + z[0-zlen,zlen]
   end
@@ -464,20 +472,15 @@ class Bignum
     # It's not illegal in BER to encode all of the leading zeroes but let's strip
     # them out anyway.
     #
-    sz = self.size
-    out = "\000" * sz
-    (sz*8).times {|bit|
-	if self[bit] == 1
-	    out[bit/8] += (1 << (bit % 8))
-	end
-    }
-
-    while out.length > 1 and out[-1] == 0
-	out.slice!(-1,1)
+    out = [0] * size    
+    (size * 8).times do |bit|
+      next unless self[bit] == 1
+      out[bit/8] += (1 << (bit % 8))
     end
-
+    out = out.pack('C*')
+    out.slice!(-1,1) while out.length > 1 and out[-1].ord.zero?
     [2, out.length].pack("CC") + out.reverse
-  end
+  end 
 
 end
 
@@ -546,7 +549,7 @@ class Array
 
   private
   def to_ber_seq_internal code
-    s = self.to_s
+    s = self.join
     [code].pack('C') + s.length.to_ber_length_encoding + s
   end
 

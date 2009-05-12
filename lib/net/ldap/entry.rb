@@ -219,7 +219,7 @@ module Net; class LDAP
     #
     def method_missing *args, &block # :nodoc:
       s = args[0].to_s.downcase.intern
-      if s.to_s[-1] == 61 and s.to_s.length > 1
+      if s.to_s =~ /=$/ and s.to_s.length > 1
         value = args[1] or raise RuntimeError.new( "unable to set value" )
         value = [value] unless value.is_a?(Array)
         name = s.to_s[0..-2].intern
