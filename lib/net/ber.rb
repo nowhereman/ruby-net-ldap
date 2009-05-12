@@ -150,14 +150,13 @@ module Net
       #return nil if eof?
 
       id = getc or return nil  # don't trash this value, we'll use it later
-      id = id.ord if RUBY_VERSION.to_f >= 1.9
+      id = id.ord
       #tag = id & 31
       #tag < 31 or raise BerError.new( "unsupported tag encoding: #{id}" )
       #tagclass = TagClasses[ id >> 6 ]
       #encoding = (id & 0x20 != 0) ? :constructed : :primitive
 
-      n = getc
-      n = n.ord if RUBY_VERSION.to_f >= 1.9
+      n = getc.ord
       lengthlength,contentlength = if n <= 127
         [1,n]
       else
