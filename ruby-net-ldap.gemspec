@@ -31,6 +31,7 @@ Gem::Specification.new do |s|
      "lib/net/ldif.rb",
      "lib/net/snmp.rb",
      "pre-setup.rb",
+     "ruby-net-ldap.gemspec",
      "setup.rb",
      "test/common.rb",
      "test/test_ber.rb",
