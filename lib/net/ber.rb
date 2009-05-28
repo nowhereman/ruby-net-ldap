@@ -104,6 +104,11 @@ module Net
     out
   end
 
+  def self.ord(value)
+    value = value.ord if value.respond_to?(:ord)
+    value
+  end
+
   # This module is for mixing into IO and IO-like objects.
   module BERParser
 
@@ -149,14 +154,13 @@ module Net
       # don't bother with this line, since IO#getc by definition returns nil on eof.
       #return nil if eof?
 
-      id = getc or return nil  # don't trash this value, we'll use it later
-      id = id.ord
+      id = BER.ord(getc) or return nil  # don't trash this value, we'll use it later
       #tag = id & 31
       #tag < 31 or raise BerError.new( "unsupported tag encoding: #{id}" )
       #tagclass = TagClasses[ id >> 6 ]
       #encoding = (id & 0x20 != 0) ? :constructed : :primitive
 
-      n = getc.ord
+      n = BER.ord(getc)
       lengthlength,contentlength = if n <= 127
         [1,n]
       else
@@ -477,7 +481,7 @@ class Bignum
       out[bit/8] += (1 << (bit % 8))
     end
     out = out.pack('C*')
-    out.slice!(-1,1) while out.length > 1 and out[-1].ord.zero?
+    out.slice!(-1,1) while out.length > 1 and Net::BER.ord(out[-1]).zero?
     [2, out.length].pack("CC") + out.reverse
   end 
 
