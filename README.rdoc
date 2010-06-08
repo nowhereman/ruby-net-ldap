@@ -1,6 +1,6 @@
 = Net::LDAP for Ruby
 
-* http://github.com/dim/ruby-net-ldap
+* http://github.com/nowhereman/ruby-net-ldap
 
 == DESCRIPTION:
 
@@ -19,6 +19,8 @@ well.
 
 * Standards-based (going for RFC 4511)
 * Portable: 100% Ruby
+* Compatible with Ruby 1.8.6.
+* Backporting some Ruby Net::LDAP v0.2 features.
 
 == INSTALL:
 
@@ -45,6 +47,7 @@ Contributions since:
 * Austin Ziegler <halostatue@gmail.com>
 * Emiel van de Laar <gemiel@gmail.com>
 * Dimitrij Denissenko <contact@dvisionfactory.com>
+* Nowhere Man
 
 == LICENSE:
 
