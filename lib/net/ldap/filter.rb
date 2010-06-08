@@ -54,41 +54,144 @@ class Filter
     @right = b
   end
 
-  # #eq creates a filter object indicating that the value of
-  # a paticular attribute must be either <i>present</i> or must
-  # match a particular string.
-  #
-  # To specify that an attribute is "present" means that only
-  # directory entries which contain a value for the particular
-  # attribute will be selected by the filter. This is useful
-  # in case of optional attributes such as <tt>mail.</tt>
-  # Presence is indicated by giving the value "*" in the second
-  # parameter to #eq. This example selects only entries that have
-  # one or more values for <tt>sAMAccountName:</tt>
-  #  f = Net::LDAP::Filter.eq( "sAMAccountName", "*" )
-  #
-  # To match a particular range of values, pass a string as the
-  # second parameter to #eq. The string may contain one or more
-  # "*" characters as wildcards: these match zero or more occurrences
-  # of any character. Full regular-expressions are <i>not</i> supported
-  # due to limitations in the underlying LDAP protocol.
-  # This example selects any entry with a <tt>mail</tt> value containing
-  # the substring "anderson":
-  #  f = Net::LDAP::Filter.eq( "mail", "*anderson*" )
-  #--
-  # Removed gt and lt. They ain't in the standard!
-  #
-  def Filter::eq attribute, value; Filter.new :eq, attribute, value; end
-  def Filter::ne attribute, value; Filter.new :ne, attribute, value; end
-  def Filter::ex attribute, value; Filter.new :ex, attribute, value; end
-  #def Filter::gt attribute, value; Filter.new :gt, attribute, value; end
-  #def Filter::lt attribute, value; Filter.new :lt, attribute, value; end
-  def Filter::ge attribute, value; Filter.new :ge, attribute, value; end
-  def Filter::le attribute, value; Filter.new :le, attribute, value; end
+  class << self
+    ##
+    # Creates a Filter object indicating that the value of a particular
+    # attribute must either be present or match a particular string.
+    #
+    # Specifying that an attribute is 'present' means only directory entries
+    # which contain a value for the particular attribute will be selected by
+    # the filter. This is useful in case of optional attributes such as
+    # <tt>mail.</tt> Presence is indicated by giving the value "*" in the
+    # second parameter to #eq. This example selects only entries that have
+    # one or more values for <tt>sAMAccountName:</tt>
+    #
+    # f = Net::LDAP::Filter.eq("sAMAccountName", "*")
+    #
+    # To match a particular range of values, pass a string as the second
+    # parameter to #eq. The string may contain one or more "*" characters as
+    # wildcards: these match zero or more occurrences of any character. Full
+    # regular-expressions are <i>not</i> supported due to limitations in the
+    # underlying LDAP protocol. This example selects any entry with a
+    # <tt>mail</tt> value containing the substring "anderson":
+    #
+    # f = Net::LDAP::Filter.eq("mail", "*anderson*")
+    def eq(attribute, value)
+      new(:eq, attribute, value)
+    end
 
-  # #pres( attribute ) is a synonym for #eq( attribute, "*" )
-  #
-  def Filter::pres attribute; Filter.eq attribute, "*"; end
+    ##
+    # Creates a Filter object indicating extensible comparison. This Filter
+    # object is currently considered EXPERIMENTAL.
+    #
+    # sample_attributes = ['cn:fr', 'cn:fr.eq',
+    # 'cn:1.3.6.1.4.1.42.2.27.9.4.49.1.3', 'cn:dn:fr', 'cn:dn:fr.eq']
+    # attr = sample_attributes.first # Pick an extensible attribute
+    # value = 'roberts'
+    #
+    # filter = "#{attr}:=#{value}" # Basic String Filter
+    # dc: example
+    #
+    # dn: ou=People,dc=example,dc=com
+    # objectClass: organizationalUnit
+    # objectClass: top
+    # ou: People
+    #
+    # dn: uid=1,ou=People,dc=example,dc=com
+    # objectClass: person
+    # objectClass: organizationalPerson
+    # objectClass: inetOrgPerson
+    # objectClass: top
+    # cn:: csO0YsOpcnRz
+    # sn:: YsO0YiByw7Riw6lydHM=
+    # givenName:: YsO0Yg==
+    # uid: 1
+    #
+    # =Refs:
+    # * http://www.ietf.org/rfc/rfc2251.txt
+    # * http://www.novell.com/documentation/edir88/edir88/?page=/documentation/edir88/edir88/data/agazepd.html
+    # * https://docs.opends.org/2.0/page/SearchingUsingInternationalCollationRules
+    #++
+    def ex(attribute, value)
+      new(:ex, attribute, value)
+    end
+
+    ##
+    # Creates a Filter object indicating that a particular attribute value
+    # is either not present or does not match a particular string; see
+    # Filter::eq for more information.
+    def ne(attribute, value)
+      new(:ne, attribute, value)
+    end
+
+    ##
+    # Creates a Filter object indicating that a particular attribute value
+    # is greater than or equal to the specified value.
+    def ge(attribute, value)
+      new(:ge, attribute, value)
+    end
+
+    ##
+    # Creates a Filter object indicating that a particular attribute value
+    # is less than or equal to the specified value.
+    def le(attribute, value)
+      new(:le, attribute, value)
+    end
+
+    ##
+    # Joins two or more filters so that all conditions must be true. Calling
+    # <tt>Filter.join(left, right)</tt> is the same as <tt>left &
+    # right</tt>.
+    #
+    # # Selects only entries that have an <tt>objectclass</tt> attribute.
+    # x = Net::LDAP::Filter.present("objectclass")
+    # # Selects only entries that have a <tt>mail</tt> attribute that begins
+    # # with "George".
+    # y = Net::LDAP::Filter.eq("mail", "George*")
+    # # Selects only entries that meet both conditions above.
+    # z = Net::LDAP::Filter.join(x, y)
+    def join(left, right)
+      Filter.new(:and, left, right)
+    end
+
+    ##
+    # Creates a disjoint comparison between two or more filters. Selects
+    # entries where either the left or right side are true. Calling
+    # <tt>Filter.intersect(left, right)</tt> is the same as <tt>left |
+    # right</tt>.
+    #
+    # # Selects only entries that have an <tt>objectclass</tt> attribute.
+    # x = Net::LDAP::Filter.present("objectclass")
+    # # Selects only entries that have a <tt>mail</tt> attribute that begins
+    # # with "George".
+    # y = Net::LDAP::Filter.eq("mail", "George*")
+    # # Selects only entries that meet either condition above.
+    # z = x | y
+    def intersect(left, right)
+      Filter.new(:or, left, right)
+    end
+
+    ##
+    # Negates a filter. Calling <tt>Fitler.negate(filter)</tt> i s the same
+    # as <tt>~filter</tt>.
+    #
+    # # Selects only entries that do not have an <tt>objectclass</tt>
+    # # attribute.
+    # x = ~Net::LDAP::Filter.present("objectclass")
+    def negate(filter)
+      Filter.new(:not, filter, nil)
+    end
+
+    ##
+    # This is a synonym for #eq(attribute, "*"). Also known as #present and
+    # #pres.
+    def present?(attribute)
+      Filter.eq(attribute, "*")
+    end
+
+    alias_method :present, :present?
+    alias_method :pres, :present?
+  end
 
   # operator & ("AND") is used to conjoin two or more filters.
   # This expression will select only entries that have an <tt>objectclass</tt>
@@ -103,7 +206,6 @@ class Filter
   #  f = Net::LDAP::Filter.pres( "objectclass" ) | Net::LDAP::Filter.eq( "mail", "George*" )
   #
   def | filter; Filter.new :or, self, filter; end
-
 
   #
   # operator ~ ("NOT") is used to negate a filter.
