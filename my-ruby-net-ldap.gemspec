@@ -20,7 +20,6 @@ Gem::Specification.new do |s|
     "COPYING",
      "History.txt",
      "LICENSE",
-     "Manifest.txt",
      "README.txt",
      "Rakefile",
      "VERSION.yml",
