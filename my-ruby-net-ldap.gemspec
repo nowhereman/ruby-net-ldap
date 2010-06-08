@@ -48,9 +48,10 @@ Gem::Specification.new do |s|
      "testserver/ldapserver.rb",
      "testserver/testdata.ldif"
   ]
-  s.homepage = %q{http://rubyforge.org/projects/net-ldap}
+  s.homepage = %q{http://github.com/nowhereman/ruby-net-ldap}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
+  s.rubyforge_project = %q{net-ldap}
   s.rubygems_version = %q{1.3.7}
   s.summary = %q{Pure Ruby LDAP library}
   s.test_files = [
