@@ -122,10 +122,10 @@ class Filter
 		self.instance_eval(str) == filter.instance_eval(str)
 	end
 
-  def to_s
+  def to_raw_rfc2254
     case @op
     when :ne
-      "(!(#{@left}=#{@right}))"
+      "!(#{@left}=#{@right})"
     when :eq
       "#{@left}=#{@right}"
    when :ex
@@ -139,16 +139,27 @@ class Filter
     when :le
       "#{@left}<=#{@right}"
     when :and
-      "(&(#{@left})(#{@right}))"
+      "&(#{@left.__send__(:to_raw_rfc2254)})(#{@right.__send__(:to_raw_rfc2254)})"
     when :or
-      "(|(#{@left})(#{@right}))"
+      "|(#{@left.__send__(:to_raw_rfc2254)})(#{@right.__send__(:to_raw_rfc2254)})"
     when :not
-      "(!(#{@left}))"
+      "!(#{@left})"
     else
-      raise "invalid or unsupported operator in LDAP Filter"
+      "!(#{@left.__send__(:to_raw_rfc2254)})"
     end
   end
 
+  private :to_raw_rfc2254
+
+  ##
+  # Converts the Filter object to an RFC 2254-compatible text format.
+  def to_rfc2254
+    "(#{to_raw_rfc2254})"
+  end
+
+  def to_s
+    to_rfc2254
+  end
 
   #--
   # to_ber
