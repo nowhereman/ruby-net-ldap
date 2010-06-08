@@ -20,7 +20,9 @@ Gem::Specification.new do |s|
   ]
   s.files = [
     "COPYING",
+     "History.rdoc",
      "LICENSE",
+     "README.rdoc",
      "Rakefile",
      "VERSION.yml",
      "lib/net/ber.rb",
