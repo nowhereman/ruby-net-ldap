@@ -17,7 +17,7 @@ begin
     s.homepage = "http://github.com/nowhereman/ruby-net-ldap"
     s.rubyforge_project = "net-ldap"
     s.description = "Net::LDAP is a feature-complete LDAP support library written in pure Ruby. It supports most LDAP client features and a subset of server features as well."
-    s.authors = ["Francis Cianfrocca", "Emiel van de Laar", "Tom Copeland", "Austin Ziegler", "Dimitrij Denissenko" "Nowhere Man"]
+    s.authors = ["Francis Cianfrocca", "Emiel van de Laar", "Tom Copeland", "Austin Ziegler", "Dimitrij Denissenko", "Nowhere Man"]
     s.test_files = Dir.glob('test*/**')
     s.extra_rdoc_files = [
       "History.rdoc",

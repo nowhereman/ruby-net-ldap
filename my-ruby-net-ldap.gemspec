@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.version = "0.5.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Francis Cianfrocca", "Emiel van de Laar", "Tom Copeland", "Austin Ziegler", "Dimitrij DenissenkoNowhere Man"]
+  s.authors = ["Francis Cianfrocca", "Emiel van de Laar", "Tom Copeland", "Austin Ziegler", "Dimitrij Denissenko", "Nowhere Man"]
   s.date = %q{2010-06-08}
   s.description = %q{Net::LDAP is a feature-complete LDAP support library written in pure Ruby. It supports most LDAP client features and a subset of server features as well.}
   s.email = %q{contact@dvisionfactory.com}
