@@ -30,7 +30,7 @@ libraries.
 You can install the RubyGems version of Net::LDAP available at 
 GitHub:
 
-* gem install my-ruby-net-ldap --source=http://gems.github.com
+  gem install my-ruby-net-ldap --source=http://rubygems.org
 
 == SYNOPSIS:
 
