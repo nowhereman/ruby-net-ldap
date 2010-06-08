@@ -10,15 +10,21 @@ require 'net/ldap'
 
 begin
   require 'jeweler'
-  Jeweler::Tasks.new do |gemspec|
-    gemspec.name = "my-ruby-net-ldap"
-    gemspec.summary = "Pure Ruby LDAP library"
-    gemspec.email = "contact@dvisionfactory.com"
-    gemspec.homepage = "http://github.com/nowhereman/ruby-net-ldap"
-    gemspec.rubyforge_project = "net-ldap"
-    gemspec.description = "Net::LDAP is a feature-complete LDAP support library written in pure Ruby. It supports most LDAP client features and a subset of server features as well."
-    gemspec.authors = ["Francis Cianfrocca", "Emiel van de Laar", "Tom Copeland", "Austin Ziegler", "Dimitrij Denissenko" "Nowhere Man"]
-    gemspec.test_files = Dir.glob('test*/**')
+  Jeweler::Tasks.new do |s|
+    s.name = "my-ruby-net-ldap"
+    s.summary = "Pure Ruby LDAP library"
+    s.email = "contact@dvisionfactory.com"
+    s.homepage = "http://github.com/nowhereman/ruby-net-ldap"
+    s.rubyforge_project = "net-ldap"
+    s.description = "Net::LDAP is a feature-complete LDAP support library written in pure Ruby. It supports most LDAP client features and a subset of server features as well."
+    s.authors = ["Francis Cianfrocca", "Emiel van de Laar", "Tom Copeland", "Austin Ziegler", "Dimitrij Denissenko" "Nowhere Man"]
+    s.test_files = Dir.glob('test*/**')
+    s.extra_rdoc_files = [
+      "History.rdoc",
+      "LICENSE",
+      "README.rdoc",
+      "COPYING"
+    ]
   end
   Jeweler::GemcutterTasks.new
 rescue LoadError

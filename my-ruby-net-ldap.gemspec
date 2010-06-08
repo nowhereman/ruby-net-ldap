@@ -13,14 +13,14 @@ Gem::Specification.new do |s|
   s.description = %q{Net::LDAP is a feature-complete LDAP support library written in pure Ruby. It supports most LDAP client features and a subset of server features as well.}
   s.email = %q{contact@dvisionfactory.com}
   s.extra_rdoc_files = [
-    "LICENSE",
-     "README.txt"
+    "COPYING",
+     "History.rdoc",
+     "LICENSE",
+     "README.rdoc"
   ]
   s.files = [
     "COPYING",
-     "History.txt",
      "LICENSE",
-     "README.txt",
      "Rakefile",
      "VERSION.yml",
      "lib/net/ber.rb",
